@@ -66,13 +66,17 @@ Object.defineProperty(RedisEmitter.prototype, 'sub', {
 })
 
 RedisEmitter.prototype.emit = function (name) {
-  var args = Array.prototype.slice.call(arguments, 1)
-  this.pub.publish(name, this.pack(args))
+  if (name === 'newListener' || name === 'error') {
+    EventEmitter.prototype.emit.apply(this, arguments)
+  } else {
+    var args = Array.prototype.slice.call(arguments, 1)
+    this.pub.publish(name, this.pack(args))
+  }
 }
 
 RedisEmitter.prototype.on =
-RedisEmitter.prototype.addListener = function (name, consumer, fn) {
-  EventEmitter.prototype.addListener.call(this, name, consumer)
+RedisEmitter.prototype.addListener = function (name, listener, fn) {
+  EventEmitter.prototype.addListener.call(this, name, listener)
 
   if (name === 'error' || name === 'newListener') return
 
