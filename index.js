@@ -21,6 +21,7 @@ function RedisEmitter(opts) {
     this.unpack = JSON.parse
   }
 
+  this.prefix = opts.prefix || ''
 }
 util.inherits(RedisEmitter, EventEmitter)
 
@@ -57,6 +58,7 @@ Object.defineProperty(RedisEmitter.prototype, 'sub', {
     var self = this
     this.sub.on('message', function(name, args) {
       args = self.unpack(args)
+      if (self.prefix.length) name = name.substring(self.prefix.length)
       args.unshift(name)
       EventEmitter.prototype.emit.apply(self, args)
     })
@@ -70,7 +72,7 @@ RedisEmitter.prototype.emit = function (name) {
     EventEmitter.prototype.emit.apply(this, arguments)
   } else {
     var args = Array.prototype.slice.call(arguments, 1)
-    this.pub.publish(name, this.pack(args))
+    this.pub.publish(this.prefix + name, this.pack(args))
   }
 }
 
@@ -80,7 +82,7 @@ RedisEmitter.prototype.addListener = function (name, listener, fn) {
 
   if (name === 'error' || name === 'newListener') return
 
-  this.sub.subscribe(name)
+  this.sub.subscribe(this.prefix + name)
 
   if (fn) {
     var self = this
@@ -98,14 +100,14 @@ RedisEmitter.prototype.removeListener = function (name) {
   EventEmitter.prototype.removeListener.apply(this, arguments)
 
   if (this.listeners(name).length == 0) {
-    this.sub.unsubscribe(name)
+    this.sub.unsubscribe(this.prefix + name)
   }
 }
 
 RedisEmitter.prototype.removeAllListener = function (name) {
   EventEmitter.prototype.removeAllListener.apply(this, arguments)
 
-  this.sub.unsubscribe(name)
+  this.sub.unsubscribe(this.prefix + name)
 }
 
 RedisEmitter.prototype.end = function () {
