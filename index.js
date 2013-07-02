@@ -29,7 +29,7 @@ util.inherits(RedisEmitter, EventEmitter)
 RedisEmitter.prototype.createClient = function(type) {
   var client
   if (this.opts[type] instanceof (this.redis.RedisClient)) {
-    client = opts.pub
+    client = opts[type]
   } else {
     client = this.redis.createClient(this.opts.port, this.opts.host, this.opts)
   }
@@ -68,19 +68,20 @@ Object.defineProperty(RedisEmitter.prototype, 'sub', {
 })
 
 RedisEmitter.prototype.emit = function (name) {
-  if (name === 'newListener' || name === 'error') {
-    EventEmitter.prototype.emit.apply(this, arguments)
-  } else {
-    var args = Array.prototype.slice.call(arguments, 1)
-    this.pub.publish(this.prefix + name, this.pack(args))
+  if (name === 'error' || name === 'newListener' || name === 'removeListener') {
+    return EventEmitter.prototype.emit.apply(this, arguments)
   }
+
+  var args = Array.prototype.slice.call(arguments, 1)
+  this.pub.publish(this.prefix + name, this.pack(args))
 }
 
 RedisEmitter.prototype.on =
 RedisEmitter.prototype.addListener = function (name, listener, fn) {
   EventEmitter.prototype.addListener.call(this, name, listener)
 
-  if (name === 'error' || name === 'newListener') return
+  if (name === 'error' || name === 'newListener' || name === 'removeListener')
+    return
 
   this.sub.subscribe(this.prefix + name)
 
@@ -99,7 +100,7 @@ RedisEmitter.prototype.addListener = function (name, listener, fn) {
 RedisEmitter.prototype.removeListener = function (name) {
   EventEmitter.prototype.removeListener.apply(this, arguments)
 
-  if (this.listeners(name).length == 0) {
+  if (EventEmitter.listenerCount(this, name) === 0) {
     this.sub.unsubscribe(this.prefix + name)
   }
 }
