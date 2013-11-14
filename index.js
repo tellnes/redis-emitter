@@ -1,12 +1,12 @@
-
 var EventEmitter = require('events').EventEmitter
   , util = require('util')
 
-
+exports = module.exports = RedisEmitter
 exports.RedisEmitter = RedisEmitter
 
 
 function RedisEmitter(opts) {
+  if (!(this instanceof RedisEmitter)) return new RedisEmitter(opts)
   EventEmitter.call(this)
 
   this.opts = opts = opts || {}
