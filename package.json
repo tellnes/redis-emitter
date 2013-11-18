@@ -2,7 +2,7 @@
   "author": "Christian Tellnes <christian@tellnes.no> (http://christian.tellnes.com/)",
   "name": "redis-emitter",
   "description": "Redis pub/sub as an EventEmitter",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "index.js",
   "dependencies": {
     "redis": "~0.7.2"
